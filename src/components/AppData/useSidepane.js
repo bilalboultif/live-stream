@@ -8,39 +8,32 @@ import {
 import { useWidgetState } from "./useUISettings";
 import { APP_DATA, WIDGET_STATE, WIDGET_VIEWS } from "../../common/constants";
 
-/**
- * Gives a boolean value if the sidepaneType matches current sidepane value in store
- * @param {string} sidepaneType
- * @returns {boolean} - if the sidepaneType is passed returns boolean else the current value
- */
 export const useIsSidepaneTypeOpen = sidepaneType => {
   if (!sidepaneType) {
     throw Error("Pass one of the side pane options");
   }
-  return useHMSStore(selectAppData(APP_DATA.sidePane)) === sidepaneType;
+
+  const currentSidePane = useHMSStore(selectAppData(APP_DATA.sidePane));
+  return currentSidePane === sidepaneType;
 };
 
-/**
- * Gives the current value of sidepane in store
- * @returns {string} - if the sidepaneType is passed returns boolean else the current value
- */
 export const useSidepaneState = () => {
-  const sidePane = useHMSStore(selectAppData(APP_DATA.sidePane));
-  return sidePane;
+  return useHMSStore(selectAppData(APP_DATA.sidePane));
 };
 
-/**
- * Toggle the sidepane value between passed sidePaneType and '';
- * @param {string} sidepaneType
- */
 export const useSidepaneToggle = sidepaneType => {
   const hmsActions = useHMSActions();
   const vanillaStore = useHMSVanillaStore();
+
   const toggleSidepane = useCallback(() => {
-    const isOpen =
-      vanillaStore.getState(selectAppData(APP_DATA.sidePane)) === sidepaneType;
-    hmsActions.setAppData(APP_DATA.sidePane, !isOpen ? sidepaneType : "");
+    const currentSidePane = vanillaStore.getState(
+      selectAppData(APP_DATA.sidePane)
+    );
+    const isOpen = currentSidePane === sidepaneType;
+
+    hmsActions.setAppData(APP_DATA.sidePane, isOpen ? "" : sidepaneType);
   }, [vanillaStore, hmsActions, sidepaneType]);
+
   return toggleSidepane;
 };
 
@@ -50,14 +43,18 @@ export const useWidgetToggle = () => {
   const toggleWidget = useCallback(
     id => {
       id = typeof id === "string" ? id : undefined;
-      setWidgetState({
-        [WIDGET_STATE.pollInView]: id,
-        [WIDGET_STATE.view]: id
-          ? WIDGET_VIEWS.VOTE
-          : widgetView
-          ? null
-          : WIDGET_VIEWS.LANDING,
-      });
+
+      if (id) {
+        setWidgetState({
+          [WIDGET_STATE.pollInView]: id,
+          [WIDGET_STATE.view]: WIDGET_VIEWS.VOTE,
+        });
+      } else {
+        setWidgetState({
+          [WIDGET_STATE.pollInView]: "",
+          [WIDGET_STATE.view]: widgetView ? null : WIDGET_VIEWS.LANDING,
+        });
+      }
     },
     [widgetView, setWidgetState]
   );
@@ -65,11 +62,9 @@ export const useWidgetToggle = () => {
   return toggleWidget;
 };
 
-/**
- * reset's the sidepane value
- */
 export const useSidepaneReset = () => {
   const hmsActions = useHMSActions();
+
   const resetSidepane = useCallback(() => {
     hmsActions.setAppData(APP_DATA.sidePane, "");
     hmsActions.setAppData(APP_DATA.widgetState, {
@@ -77,5 +72,6 @@ export const useSidepaneReset = () => {
       [WIDGET_STATE.view]: "",
     });
   }, [hmsActions]);
+
   return resetSidepane;
 };

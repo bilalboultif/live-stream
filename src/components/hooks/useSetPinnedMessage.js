@@ -23,18 +23,29 @@ export const useSetPinnedMessage = () => {
      * @param {import("@100mslive/react-sdk").HMSMessage | undefined} message
      */
     async message => {
-      const peerName =
-        vanillaStore.getState(selectPeerNameByID(message?.sender)) ||
-        message?.senderName;
-      const newPinnedMessage = message
-        ? peerName
-          ? `${peerName}: ${message.message}`
-          : message.message
-        : null;
-      if (newPinnedMessage !== pinnedMessage) {
-        await hmsActions.sessionStore
-          .set(SESSION_STORE_KEY.PINNED_MESSAGE, newPinnedMessage)
-          .catch(err => ToastManager.addToast({ title: err.description }));
+      let newPinnedMessage = null;
+
+      if (message) {
+        const peerName =
+          vanillaStore.getState(selectPeerNameByID(message.sender)) ||
+          message.senderName;
+
+        if (peerName) {
+          newPinnedMessage = `${peerName}: ${message.message}`;
+        } else {
+          newPinnedMessage = message.message;
+        }
+      }
+
+      try {
+        if (newPinnedMessage !== pinnedMessage) {
+          await hmsActions.sessionStore
+            .set(SESSION_STORE_KEY.PINNED_MESSAGE, newPinnedMessage)
+            .catch(err => ToastManager.addToast({ title: err.description }));
+        }
+      } catch (err) {
+        // Handle the error here
+        console.error(err);
       }
     },
     [hmsActions, vanillaStore, pinnedMessage]

@@ -61,6 +61,34 @@ const PinnedMessage = ({ clearPinnedMessage }) => {
   ) : null;
 };
 
+const NewMessageIndicator = ({ role, peerId, scrollToBottom }) => {
+  const unreadCount = useUnreadCount({ role, peerId });
+  if (!unreadCount) {
+    return null;
+  }
+  return (
+    <Flex
+      justify="center"
+      css={{
+        width: "100%",
+        left: 0,
+        bottom: "100%",
+        position: "absolute",
+      }}
+    >
+      <Button
+        onClick={() => {
+          scrollToBottom(unreadCount);
+        }}
+        css={{ p: "$2 $4", "& > svg": { ml: "$4" } }}
+      >
+        New Messages
+        <ChevronDownIcon width={16} height={16} />
+      </Button>
+    </Flex>
+  );
+};
+
 export const Chat = () => {
   const notification = useHMSNotifications(HMSNotificationTypes.PEER_LEFT);
   const [peerSelector, setPeerSelector] = useSetSubscribedChatSelector(
@@ -73,11 +101,7 @@ export const Chat = () => {
   const [chatOptions, setChatOptions] = useState({
     role: roleSelector || "",
     peerId: peerSelector && peerName ? peerSelector : "",
-    selection: roleSelector
-      ? roleSelector
-      : peerSelector && peerName
-      ? peerName
-      : "Everyone",
+    selection: "Everyone", // Default value
   });
   const [isSelectorOpen, setSelectorOpen] = useState(false);
   const listRef = useRef(null);
@@ -99,8 +123,8 @@ export const Chat = () => {
   }, [notification, peerSelector, setPeerSelector]);
 
   const storeMessageSelector = selectHMSMessagesCount;
-
   const messagesCount = useHMSStore(storeMessageSelector) || 0;
+
   const scrollToBottom = useCallback(
     (unreadCount = 0) => {
       if (listRef.current && listRef.current.scrollToItem && unreadCount > 0) {
@@ -155,34 +179,6 @@ export const Chat = () => {
           />
         )}
       </ChatFooter>
-    </Flex>
-  );
-};
-
-const NewMessageIndicator = ({ role, peerId, scrollToBottom }) => {
-  const unreadCount = useUnreadCount({ role, peerId });
-  if (!unreadCount) {
-    return null;
-  }
-  return (
-    <Flex
-      justify="center"
-      css={{
-        width: "100%",
-        left: 0,
-        bottom: "100%",
-        position: "absolute",
-      }}
-    >
-      <Button
-        onClick={() => {
-          scrollToBottom(unreadCount);
-        }}
-        css={{ p: "$2 $4", "& > svg": { ml: "$4" } }}
-      >
-        New Messages
-        <ChevronDownIcon width={16} height={16} />
-      </Button>
     </Flex>
   );
 };
